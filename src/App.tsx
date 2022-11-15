@@ -1,34 +1,65 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import { Canvas } from "@react-three/fiber";
+import { KeyboardControls } from "@react-three/drei";
+import styled from "@emotion/styled";
+
+import Layout from "./Layout";
+
+import { Physics, Debug, RigidBody } from "@react-three/rapier";
+import Ball from "./components/Ball";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={new URL('/vite.svg', import.meta.url).href} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </div>
-  )
-}
+    <App.Styled>
+      <KeyboardControls
+        map={[
+          { name: "forward", keys: ["KeyW"] },
+          { name: "backward", keys: ["KeyS"] },
+          { name: "leftward", keys: ["KeyA"] },
+          { name: "rightward", keys: ["KeyD"] },
+          { name: "jump", keys: ["Space"] },
+        ]}
+      >
+        <Canvas shadows>
+          <Physics
+            gravity={[0, -60, 0]}
+            // timeStep={1 / 60}
+            //
+          >
+            <Debug />
 
-export default App
+            <Layout />
+
+            {/* 🧊 cube */}
+            <RigidBody position-y={1}>
+              <mesh castShadow>
+                <boxGeometry args={[2, 2, 2]} />
+                <meshStandardMaterial color="blue" />
+              </mesh>
+            </RigidBody>
+
+            {/* 🏀 ball */}
+            <Ball />
+
+            {/* Ground */}
+            <RigidBody
+              type="fixed"
+              position-y={-0.1 / 2}
+              rotation={[-Math.PI / 2, 0, 0]}
+            >
+              <mesh receiveShadow>
+                <boxGeometry args={[100, 100, 0.1]} />
+                <meshStandardMaterial color="gray" transparent opacity={0.8} />
+              </mesh>
+            </RigidBody>
+          </Physics>
+        </Canvas>
+      </KeyboardControls>
+    </App.Styled>
+  );
+}
+App.Styled = styled.div`
+  position: fixed;
+  inset: 0;
+`;
+
+export default App;

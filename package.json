@@ -1,5 +1,5 @@
 {
-  "name": "tpl-react",
+  "name": "tpl-react-three",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -9,12 +9,20 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.10.5",
+    "@emotion/styled": "^11.10.5",
+    "@react-three/drei": "^9.40.0",
+    "@react-three/fiber": "^8.9.1",
+    "@react-three/rapier": "^0.10.0",
+    "leva": "^0.9.34",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "three": "^0.146.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.24",
     "@types/react-dom": "^18.0.8",
+    "@types/three": "^0.146.0",
     "@vitejs/plugin-react": "^2.2.0",
     "typescript": "^4.9.3",
     "vite": "^3.2.4"
