@@ -78,7 +78,7 @@ function Layout({ children, bg }: LayoutProps) {
   );
 }
 Layout.defaultProps = {
-  bg: "#484848",
+  bg: "#393939",
 };
 
 export default Layout;
