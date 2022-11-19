@@ -8,16 +8,16 @@
       "openFiles": ["src/App.tsx"]
     },
     "vscode": {
-			"settings": {},			
-			"extensions": [
-				"dbaeumer.vscode-eslint"
-			]
-		}
+      "settings": {},			
+      "extensions": [
+        "dbaeumer.vscode-eslint"
+      ]
+    }
   },
   "portsAttributes": {
     "5173": {
-      "label": "Application",
-      "onAutoForward": "openPreview"
+      "label": "Vite dev server",
+      "onAutoForward": "notify"
     }
   },
   "forwardPorts": [5173]
