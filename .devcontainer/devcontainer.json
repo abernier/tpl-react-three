@@ -1,17 +1,18 @@
 {
-  "hostRequirements": {
-    "cpus": 4
-  },
   "waitFor": "onCreateCommand",
   "updateContentCommand": "npm ci",
   "postCreateCommand": "",
-  "postAttachCommand": {
-    "server": "npm run dev"
-  },
+  "postAttachCommand": "npm run dev -- --port 5173",
   "customizations": {
     "codespaces": {
       "openFiles": ["src/App.tsx"]
-    }
+    },
+    "vscode": {
+			"settings": {},			
+			"extensions": [
+				"dbaeumer.vscode-eslint"
+			]
+		}
   },
   "portsAttributes": {
     "5173": {
