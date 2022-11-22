@@ -9,7 +9,7 @@ import Ball from "./components/Ball";
 
 function App() {
   return (
-    <App.Styled>
+    <Styled>
       <KeyboardControls
         map={[
           { name: "forward", keys: ["KeyW"] },
@@ -54,12 +54,12 @@ function App() {
           </Physics>
         </Canvas>
       </KeyboardControls>
-    </App.Styled>
+    </Styled>
   );
 }
-App.Styled = styled.div`
-  position: fixed;
-  inset: 0;
-`;
+export const Styled = styled.div`
+position: fixed;
+inset: 0;
+`
 
 export default App;
