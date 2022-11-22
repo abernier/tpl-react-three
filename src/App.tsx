@@ -1,10 +1,10 @@
+import styled from "@emotion/styled";
 import { Canvas } from "@react-three/fiber";
 import { KeyboardControls } from "@react-three/drei";
-import styled from "@emotion/styled";
+import { Physics, Debug, RigidBody } from "@react-three/rapier";
 
 import Layout from "./Layout";
-
-import { Physics, Debug, RigidBody } from "@react-three/rapier";
+import Cube from "./components/Cube";
 import Ball from "./components/Ball";
 
 function App() {
@@ -30,12 +30,7 @@ function App() {
             <Layout />
 
             {/* 🧊 cube */}
-            <RigidBody position-y={1}>
-              <mesh castShadow>
-                <boxGeometry args={[2, 2, 2]} />
-                <meshStandardMaterial color="blue" />
-              </mesh>
-            </RigidBody>
+            <Cube position-y={1} />
 
             {/* 🏀 ball */}
             <Ball />
@@ -58,8 +53,8 @@ function App() {
   );
 }
 export const Styled = styled.div`
-position: fixed;
-inset: 0;
-`
+  position: fixed;
+  inset: 0;
+`;
 
 export default App;
