@@ -1,5 +1,13 @@
 {
+  //
+  // devcontainer: https://containers.dev/implementors/json_reference/
+  //
+  // this is inspired from https://youtu.be/AYRxDoUxcfQ?t=1103s (see: https://github.com/github/codespaces-preact/blob/782235cc78702dc2a46a6906979356b51ac269d5/.devcontainer/devcontainer.json)
+  //
   "image": "mcr.microsoft.com/vscode/devcontainers/javascript-node:16",
+  // "hostRequirements": {
+  //   "cpus": 4
+  // },
   "waitFor": "onCreateCommand",
   "updateContentCommand": "npm ci",
   "postCreateCommand": "",
