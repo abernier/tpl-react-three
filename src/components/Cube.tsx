@@ -18,8 +18,8 @@ function Cube(props: CubeProps) {
       <mesh
         castShadow
         scale-z={scaleZ}
-        onPointerEnter={(e) => setScaleZ(5)}
-        onPointerLeave={(e) => setScaleZ(1)}
+        // onPointerEnter={(e) => setScaleZ(5)}
+        // onPointerLeave={(e) => setScaleZ(1)}
         // onClick={(e) => console.log('rigidBody', rigidBodyRef.current)}
       >
         <boxGeometry args={[2, 2, 2]} />
