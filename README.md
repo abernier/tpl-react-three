@@ -1,4 +1,4 @@
-Try on: [Codespace](https://github.com/codespaces/new?template_repository=abernier%2Ftpl-react-three) | [CodeSandbox](https://codesandbox.io/s/github/abernier/tpl-react-three)
+Try on: [Codespace](https://github.com/codespaces/new?template_repository=abernier%2Ftpl-react-three) | [StackBlitz](https://stackblitz.com/github/abernier/tpl-react-three)
 
 # INSTALL
 
@@ -24,7 +24,7 @@ $ npm run build
 
 ## Deploy
 
-Pre-requisites: 
+Pre-requisites:
 
 - Make sure you have Github Pages set to `Github Actions` in your [project's Settings](/../../settings/pages)
 
