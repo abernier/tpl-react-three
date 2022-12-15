@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import styled from "@emotion/styled";
 import { Canvas } from "@react-three/fiber";
 import { KeyboardControls } from "@react-three/drei";
@@ -8,17 +9,20 @@ import Cube from "./components/Cube";
 import Ball from "./components/Ball";
 
 function App() {
+  const map = useMemo(
+    () => [
+      { name: "forward", keys: ["KeyW"] },
+      { name: "backward", keys: ["KeyS"] },
+      { name: "leftward", keys: ["KeyA"] },
+      { name: "rightward", keys: ["KeyD"] },
+      { name: "jump", keys: ["Space"] },
+    ],
+    []
+  );
+
   return (
     <Styled>
-      <KeyboardControls
-        map={[
-          { name: "forward", keys: ["KeyW"] },
-          { name: "backward", keys: ["KeyS"] },
-          { name: "leftward", keys: ["KeyA"] },
-          { name: "rightward", keys: ["KeyD"] },
-          { name: "jump", keys: ["Space"] },
-        ]}
-      >
+      <KeyboardControls map={map}>
         <Canvas shadows>
           <Physics
             gravity={[0, -60, 0]}
