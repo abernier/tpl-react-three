@@ -14,6 +14,7 @@
     "@react-three/drei": "^9.40.0",
     "@react-three/fiber": "^8.9.1",
     "@react-three/rapier": "^0.11.1",
+    "@react-three/xr": "^5.1.1",
     "leva": "^0.9.34",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
