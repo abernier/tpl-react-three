@@ -1,6 +1,5 @@
-import { ReactNode, useEffect, useRef, useLayoutEffect } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import * as THREE from "three";
-import { useThree } from "@react-three/fiber";
 import { useXR } from "@react-three/xr";
 
 import {
@@ -94,7 +93,9 @@ function Camera() {
 
   useEffect(() => {
     if (isPresenting === true) {
-      player.position.set(...gui.position); // shift player instead of camera
+      if (camera1Ref.current) {
+        player.position.copy(camera1Ref.current.position); // shift player instead of camera
+      }
     } else {
       player.position.set(0, 0, 0);
     }

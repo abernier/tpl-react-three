@@ -3,7 +3,7 @@ import styled from "@emotion/styled";
 import { Canvas, useThree } from "@react-three/fiber";
 import { useKeyboardControls } from "@react-three/drei";
 import { Physics, Debug } from "@react-three/rapier";
-import { XRButton, XR, Controllers, Hands, VRButton } from "@react-three/xr";
+import { XR, Controllers, Hands, VRButton } from "@react-three/xr";
 
 import Layout from "./Layout";
 import Cube from "./components/Cube";
@@ -57,7 +57,7 @@ function Scene() {
   const escPressed = useKeyboardControls((state) => state.esc);
   useEffect(() => {
     gl.xr.getSession()?.end(); // https://stackoverflow.com/a/71566927/133327
-  }, [escPressed]);
+  }, [escPressed, gl.xr]);
 
   return (
     <>
