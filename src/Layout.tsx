@@ -1,5 +1,7 @@
-import { ReactNode, useRef } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import * as THREE from "three";
+import { useThree } from "@react-three/fiber";
+import { useXR } from "@react-three/xr";
 
 import {
   OrbitControls,
@@ -9,27 +11,16 @@ import {
 
 import { useControls, folder } from "leva";
 
-import type { Camera } from "three";
-
 type LayoutProps = {
   children?: ReactNode;
-  bg: THREE.Color;
+  bg?: string;
 };
 
-function Layout({ children, bg }: LayoutProps) {
-  const cameraRef = useRef<Camera>();
-
-  const [gui, setGui] = useControls(() => ({
+function Layout({ children, bg = "#393939" }: LayoutProps) {
+  const [gui] = useControls(() => ({
     Layout: folder(
       {
-        bg: Layout.defaultProps.bg,
-        camera: folder({
-          fov: 50,
-          position: {
-            value: [7, 4.0, 21.0],
-            step: 0.1,
-          },
-        }),
+        bg,
         grid: true,
         axes: true,
       },
@@ -40,18 +31,7 @@ function Layout({ children, bg }: LayoutProps) {
 
   return (
     <>
-      <PerspectiveCamera
-        makeDefault
-        fov={gui.fov}
-        ref={cameraRef}
-        position={gui.position}
-      />
-      <OrbitControls
-        camera={cameraRef.current}
-        onChange={(e) => {
-          setGui({ position: cameraRef.current?.position.toArray() }); // https://github.com/pmndrs/leva/blob/main/docs/advanced/controlled-inputs.md#set-and-onchange
-        }}
-      />
+      <Camera />
 
       <Environment background>
         <mesh scale={100}>
@@ -70,15 +50,81 @@ function Layout({ children, bg }: LayoutProps) {
       />
       <ambientLight intensity={0.2} />
 
-      {gui.grid && <gridHelper args={[30, 30, 30]} position-y="0" />}
+      {gui.grid && <gridHelper args={[30, 30, 30]} position-y=".01" />}
       {gui.axes && <axesHelper args={[5]} />}
 
       {children}
     </>
   );
 }
-Layout.defaultProps = {
-  bg: "#393939",
-};
+
+function Camera() {
+  const camera1Ref = useRef<THREE.Camera>(); // non-XR camera
+  const camera2Ref = useRef<THREE.Camera>(); // XR camera
+
+  // const { camera } = useThree();
+  // console.log("camera", camera.position);
+  // globalThis.camera = camera;
+
+  const isPresenting = useXR((state) => state.isPresenting);
+  // console.log("isPresenting=", isPresenting);
+
+  const player = useXR((state) => state.player);
+  // console.log("player=", player);
+  // globalThis.player = player;
+
+  const [gui, setGui] = useControls(() => ({
+    Layout: folder(
+      {
+        camera: folder({
+          fov: 50,
+          position: {
+            value: [7, 4.0, 21.0],
+            step: 0.1,
+          },
+        }),
+      },
+      { collapsed: true }
+    ),
+  }));
+  // console.log("gui=", gui);
+
+  useEffect(() => {
+    if (isPresenting === true) {
+      // camera2Ref.current?.position.set(0, 0, 0);
+      player.position.set(...gui.position); // shift player instead of camera
+    } else {
+      // camera1Ref.current?.position.set(...gui.position);
+      player.position.set(0, 0, 0);
+    }
+  }, [isPresenting]);
+
+  return (
+    <>
+      {isPresenting ? (
+        <PerspectiveCamera
+          ref={camera2Ref}
+          // position={[0, 0, 0]} // always at origin -> `player` is shifted instead
+          makeDefault
+        />
+      ) : (
+        <PerspectiveCamera
+          ref={camera1Ref}
+          fov={gui.fov}
+          position={gui.position}
+          makeDefault
+        />
+      )}
+
+      <OrbitControls
+        camera={camera1Ref.current}
+        onChange={(e) => {
+          setGui({ position: camera1Ref.current?.position.toArray() }); // https://github.com/pmndrs/leva/blob/main/docs/advanced/controlled-inputs.md#set-and-onchange
+        }}
+        // makeDefault
+      />
+    </>
+  );
+}
 
 export default Layout;
