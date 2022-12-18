@@ -11,6 +11,8 @@ import {
 
 import { useControls, folder } from "leva";
 
+import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
+
 type LayoutProps = {
   children?: ReactNode;
   bg?: string;
@@ -61,6 +63,7 @@ function Layout({ children, bg = "#393939" }: LayoutProps) {
 function Camera() {
   const camera1Ref = useRef<THREE.Camera>(); // non-XR camera
   const camera2Ref = useRef<THREE.Camera>(); // XR camera
+  const orbitControlsRef = useRef<OrbitControlsImpl>(null);
 
   // const { camera } = useThree();
   // console.log("camera", camera.position);
@@ -117,6 +120,7 @@ function Camera() {
       )}
 
       <OrbitControls
+        ref={orbitControlsRef}
         camera={camera1Ref.current}
         onChange={(e) => {
           setGui({ position: camera1Ref.current?.position.toArray() }); // https://github.com/pmndrs/leva/blob/main/docs/advanced/controlled-inputs.md#set-and-onchange
