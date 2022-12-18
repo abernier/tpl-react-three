@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useEffect, useRef, useLayoutEffect } from "react";
 import * as THREE from "three";
 import { useThree } from "@react-three/fiber";
 import { useXR } from "@react-three/xr";
@@ -94,31 +94,25 @@ function Camera() {
 
   useEffect(() => {
     if (isPresenting === true) {
-      // camera2Ref.current?.position.set(0, 0, 0);
       player.position.set(...gui.position); // shift player instead of camera
     } else {
-      // camera1Ref.current?.position.set(...gui.position);
       player.position.set(0, 0, 0);
     }
-  }, [isPresenting]);
+  }, [isPresenting, player]);
 
   return (
     <>
-      {isPresenting ? (
-        <PerspectiveCamera
-          ref={camera2Ref}
-          // position={[0, 0, 0]} // always at origin -> `player` is shifted instead
-          makeDefault
-        />
-      ) : (
-        <PerspectiveCamera
-          ref={camera1Ref}
-          fov={gui.fov}
-          position={gui.position}
-          makeDefault
-        />
-      )}
-
+      <PerspectiveCamera
+        ref={camera2Ref}
+        position={[0, 0, 0]} // always at origin -> `player` is shifted instead
+        makeDefault={isPresenting}
+      />
+      <PerspectiveCamera
+        ref={camera1Ref}
+        fov={gui.fov}
+        position={gui.position}
+        makeDefault={!isPresenting}
+      />
       <OrbitControls
         ref={orbitControlsRef}
         camera={camera1Ref.current}
