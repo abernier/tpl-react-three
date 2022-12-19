@@ -1,9 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import styled from "@emotion/styled";
 import { Canvas, useThree } from "@react-three/fiber";
 import { useKeyboardControls } from "@react-three/drei";
 import { Physics, Debug } from "@react-three/rapier";
-import { XR, Controllers, Hands, VRButton } from "@react-three/xr";
+import { XR, Controllers, Hands, VRButton, Interactive } from "@react-three/xr";
 
 import Layout from "./Layout";
 import Cube from "./components/Cube";
@@ -49,11 +49,14 @@ export const Styled = styled.div`
 export default App;
 
 function Scene() {
+  const [clr, setClr] = useState<string | undefined>(undefined);
   //
   // ESC key to exit XR
   //
 
-  const { gl } = useThree();
+  const gl = useThree((state) => state.gl);
+  gl.xr.setFramebufferScaleFactor(2.0);
+
   const escPressed = useKeyboardControls((state) => state.esc);
   useEffect(() => {
     gl.xr.getSession()?.end(); // https://stackoverflow.com/a/71566927/133327
@@ -61,7 +64,12 @@ function Scene() {
 
   return (
     <>
-      <Cube position-y={1} />
+      <Interactive
+        onHover={(e) => setClr("yellow")}
+        onBlur={(e) => setClr(undefined)}
+      >
+        <Cube position-y={1} color={clr} />
+      </Interactive>
       <Ball />
 
       <Ground />
