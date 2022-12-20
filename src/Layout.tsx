@@ -1,12 +1,15 @@
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { useXR } from "@react-three/xr";
+import { useFrame, useThree } from "@react-three/fiber";
+import { useController, useXR } from "@react-three/xr";
 
 import {
   OrbitControls,
   Environment,
   PerspectiveCamera,
 } from "@react-three/drei";
+
+import FaceText from "./components/FaceText";
 
 import { useControls, folder } from "leva";
 
@@ -60,20 +63,48 @@ function Layout({ children, bg = "#393939" }: LayoutProps) {
 }
 
 function Camera() {
-  const camera1Ref = useRef<THREE.Camera>(); // non-XR camera
-  const camera2Ref = useRef<THREE.Camera>(); // XR camera
+  const cameraRef = useRef<THREE.Camera>(); // non-XR camera
   const orbitControlsRef = useRef<OrbitControlsImpl>(null);
 
-  // const { camera } = useThree();
-  // console.log("camera", camera.position);
-  // globalThis.camera = camera;
-
   const isPresenting = useXR((state) => state.isPresenting);
-  // console.log("isPresenting=", isPresenting);
-
   const player = useXR((state) => state.player);
-  // console.log("player=", player);
-  // globalThis.player = player;
+
+  const [text1, setText1] = useState("left");
+  const [text2, setText2] = useState("right");
+
+  // https://github.com/pmndrs/react-xr/issues/218
+  const leftController = useController("left");
+  const rightController = useController("right");
+  useFrame((state, delta, XRFrame) => {
+    if (XRFrame) {
+      if (leftController) {
+        const leftGamePad = leftController.inputSource.gamepad;
+
+        const x = leftGamePad?.axes[2] || 0;
+        const y = leftGamePad?.axes[3] || 0;
+        setText1(`left: [ ${x.toFixed(3)}, ${y.toFixed(3)} ]`);
+
+        const lambda = 2.5;
+
+        player.position.add(
+          new THREE.Vector3(x / lambda, 0, y / lambda).applyEuler(
+            player.rotation
+          )
+        );
+      }
+
+      if (rightController) {
+        const rightGamePad = rightController.inputSource.gamepad;
+
+        const x = rightGamePad?.axes[2] || 0;
+        const y = rightGamePad?.axes[3] || 0;
+        setText2(`right: [ ${x.toFixed(3)}, ${y.toFixed(3)} ]`);
+
+        if (x) player.rotation.y -= x / 15;
+        if (y) player.position.y -= y / 10;
+      }
+    }
+  });
 
   const [gui, setGui] = useControls(() => ({
     Layout: folder(
@@ -91,34 +122,37 @@ function Camera() {
   }));
   // console.log("gui=", gui);
 
-  useEffect(() => {
-    if (isPresenting === true) {
-      if (camera1Ref.current) {
-        player.position.copy(camera1Ref.current.position); // shift player instead of camera
-      }
-    } else {
-      player.position.set(0, 0, 0);
-    }
-  }, [isPresenting, player]);
+  // useEffect(() => {
+  //   if (isPresenting === true) {
+  //     if (cameraRef.current) {
+  //       const pos = cameraRef.current.position.clone();
+  //       pos.setY(0);
+  //       player.position.copy(pos); // shift player instead of camera
+  //     }
+  //     // if (orbitControlsRef.current) {
+  //     //   player.lookAt(orbitControlsRef.current.target);
+  //     // }
+  //   } else {
+  //     player.position.set(0, 0, 0);
+  //   }
+  // }, [isPresenting, player]);
 
   return (
     <>
+      <FaceText position={[0, 6, 0]}>{text1}</FaceText>
+      <FaceText position={[0, 5, 0]}>{text2}</FaceText>
+
       <PerspectiveCamera
-        ref={camera2Ref}
-        position={[0, 0, 0]} // always at origin -> `player` is shifted instead
-        makeDefault={isPresenting}
-      />
-      <PerspectiveCamera
-        ref={camera1Ref}
+        ref={cameraRef}
         fov={gui.fov}
         position={gui.position}
         makeDefault={!isPresenting}
       />
       <OrbitControls
         ref={orbitControlsRef}
-        camera={camera1Ref.current}
+        camera={cameraRef.current}
         onChange={(e) => {
-          setGui({ position: camera1Ref.current?.position.toArray() }); // https://github.com/pmndrs/leva/blob/main/docs/advanced/controlled-inputs.md#set-and-onchange
+          setGui({ position: cameraRef.current?.position.toArray() }); // https://github.com/pmndrs/leva/blob/main/docs/advanced/controlled-inputs.md#set-and-onchange
         }}
         // makeDefault
       />

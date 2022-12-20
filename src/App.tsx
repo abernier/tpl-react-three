@@ -55,7 +55,7 @@ function Scene() {
   //
 
   const gl = useThree((state) => state.gl);
-  gl.xr.setFramebufferScaleFactor(2.0);
+  // gl.xr.setFramebufferScaleFactor(2.0);
 
   const escPressed = useKeyboardControls((state) => state.esc);
   useEffect(() => {
@@ -65,7 +65,10 @@ function Scene() {
   return (
     <>
       <Interactive
-        onHover={(e) => setClr("yellow")}
+        onHover={(e) => {
+          console.log("hover");
+          setClr("brown");
+        }}
         onBlur={(e) => setClr(undefined)}
       >
         <Cube position-y={1} color={clr} />
