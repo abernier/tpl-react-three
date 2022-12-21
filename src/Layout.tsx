@@ -1,32 +1,35 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { useController, useXR } from "@react-three/xr";
 
-import {
-  OrbitControls,
-  Environment,
-  PerspectiveCamera,
-} from "@react-three/drei";
+import { Environment, PerspectiveCamera } from "@react-three/drei";
 
 import FaceText from "./components/FaceText";
 
 import { useControls, folder } from "leva";
 
-import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
-
-type LayoutProps = {
+function Layout({
+  children,
+  bg = "#393939",
+}: {
   children?: ReactNode;
   bg?: string;
-};
-
-function Layout({ children, bg = "#393939" }: LayoutProps) {
+}) {
   const [gui] = useControls(() => ({
     Layout: folder(
       {
         bg,
         grid: true,
         axes: true,
+        camera: folder({
+          fov: 50,
+          player: { value: [7, 4.0, 21.0], step: 0.1 }, // ~= position of the camera (the player holds the camera)
+          lookAt: {
+            value: [0, 0, 0],
+            step: 0.1,
+          },
+        }),
       },
       { collapsed: true }
     ),
@@ -35,7 +38,7 @@ function Layout({ children, bg = "#393939" }: LayoutProps) {
 
   return (
     <>
-      <Camera />
+      <Camera position={gui.player} lookAt={gui.lookAt} fov={gui.fov} />
 
       <Environment background>
         <mesh scale={100}>
@@ -62,19 +65,41 @@ function Layout({ children, bg = "#393939" }: LayoutProps) {
   );
 }
 
-function Camera() {
+function Camera({
+  position,
+  lookAt,
+  fov,
+}: {
+  position: [number, number, number];
+  lookAt: [number, number, number];
+  fov: number;
+}) {
   const cameraRef = useRef<THREE.Camera>(); // non-XR camera
-  const orbitControlsRef = useRef<OrbitControlsImpl>(null);
 
-  const isPresenting = useXR((state) => state.isPresenting);
   const player = useXR((state) => state.player);
+
+  //
+  //  🤳 Camera (player position + cam lookAt rotation)
+  //
+
+  useEffect(() => {
+    player.position.set(...position);
+  }, [player, position]);
+
+  useFrame(() => {
+    cameraRef.current?.lookAt(...lookAt);
+  });
 
   const [text1, setText1] = useState("left");
   const [text2, setText2] = useState("right");
 
-  // https://github.com/pmndrs/react-xr/issues/218
+  //
+  // 🕹️ Gamepads (see: https://github.com/pmndrs/react-xr/issues/218)
+  //
+
   const leftController = useController("left");
   const rightController = useController("right");
+
   useFrame((state, delta, XRFrame) => {
     if (XRFrame) {
       if (leftController) {
@@ -106,56 +131,12 @@ function Camera() {
     }
   });
 
-  const [gui, setGui] = useControls(() => ({
-    Layout: folder(
-      {
-        camera: folder({
-          fov: 50,
-          position: {
-            value: [7, 4.0, 21.0],
-            step: 0.1,
-          },
-        }),
-      },
-      { collapsed: true }
-    ),
-  }));
-  // console.log("gui=", gui);
-
-  // useEffect(() => {
-  //   if (isPresenting === true) {
-  //     if (cameraRef.current) {
-  //       const pos = cameraRef.current.position.clone();
-  //       pos.setY(0);
-  //       player.position.copy(pos); // shift player instead of camera
-  //     }
-  //     // if (orbitControlsRef.current) {
-  //     //   player.lookAt(orbitControlsRef.current.target);
-  //     // }
-  //   } else {
-  //     player.position.set(0, 0, 0);
-  //   }
-  // }, [isPresenting, player]);
-
   return (
     <>
       <FaceText position={[0, 6, 0]}>{text1}</FaceText>
       <FaceText position={[0, 5, 0]}>{text2}</FaceText>
 
-      <PerspectiveCamera
-        ref={cameraRef}
-        fov={gui.fov}
-        position={gui.position}
-        makeDefault={!isPresenting}
-      />
-      <OrbitControls
-        ref={orbitControlsRef}
-        camera={cameraRef.current}
-        onChange={(e) => {
-          setGui({ position: cameraRef.current?.position.toArray() }); // https://github.com/pmndrs/leva/blob/main/docs/advanced/controlled-inputs.md#set-and-onchange
-        }}
-        // makeDefault
-      />
+      <PerspectiveCamera ref={cameraRef} fov={fov} makeDefault />
     </>
   );
 }
