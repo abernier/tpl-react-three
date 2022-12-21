@@ -9,6 +9,7 @@ import Layout from "./Layout";
 import Cube from "./components/Cube";
 import Ball from "./components/Ball";
 import Ground from "./components/Ground";
+import { Rope } from "./components/Rope";
 
 function App() {
   return (
@@ -74,6 +75,8 @@ function Scene() {
         <Cube position-y={1} color={clr} />
       </Interactive>
       <Ball />
+
+      <Rope length={5} position={[3, 1, 0]} />
 
       <Ground />
     </>
