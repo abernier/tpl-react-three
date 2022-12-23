@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { useRapier, RigidBody } from "@react-three/rapier";
-
 import { useKeyboardControls } from "@react-three/drei";
-
-import type { RigidBodyApi } from "@react-three/rapier";
+import { useXR } from "@react-three/xr";
 import { folder, useControls } from "leva";
 
+import type { RigidBodyApi } from "@react-three/rapier";
+
 function Ball() {
-  const { camera } = useThree();
+  const { player } = useXR();
 
   const bodyRef = useRef<RigidBodyApi>(null);
 
@@ -67,7 +67,7 @@ function Ball() {
     const { current: body } = bodyRef;
 
     if (body && impulse.length() > 0) {
-      impulse.applyMatrix4(camera.matrixWorld).sub(camera.position);
+      impulse.applyMatrix4(player.matrixWorld).sub(player.position);
       impulse.setY(0);
       impulse.normalize().setLength(impulseStrength);
       // console.log("impulse", impulse);
@@ -76,7 +76,7 @@ function Ball() {
     }
 
     if (body && torque.length() > 0) {
-      torque.applyMatrix4(camera.matrixWorld).sub(camera.position);
+      torque.applyMatrix4(player.matrixWorld).sub(player.position);
       torque.setY(0);
       torque.normalize().setLength(torqueStrength);
       // console.log("torque", torque);
