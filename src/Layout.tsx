@@ -2,8 +2,8 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { useController, useXR } from "@react-three/xr";
-
 import { Environment, PerspectiveCamera } from "@react-three/drei";
+import nipplejs, { JoystickManager } from "nipplejs";
 
 import FaceText from "./components/FaceText";
 
@@ -16,7 +16,7 @@ function Layout({
   children?: ReactNode;
   bg?: string;
 }) {
-  const [gui] = useControls(() => ({
+  const [gui, setGui] = useControls(() => ({
     Layout: folder(
       {
         bg,
@@ -30,6 +30,9 @@ function Layout({
             step: 0.1,
           },
         }),
+        gamepads: folder({
+          nipples: true,
+        }),
       },
       { collapsed: true }
     ),
@@ -39,6 +42,8 @@ function Layout({
   return (
     <>
       <Camera position={gui.player} lookAt={gui.lookAt} fov={gui.fov} />
+
+      <Gamepads nipples={gui.nipples} />
 
       <Environment background>
         <mesh scale={100}>
@@ -65,6 +70,150 @@ function Layout({
   );
 }
 
+type GamepadsProps = {
+  nipples: boolean;
+};
+function Gamepads({ nipples = true }: GamepadsProps) {
+  const leftpadRef = useRef({ x: 0, y: 0 });
+  const rightpadRef = useRef({ x: 0, y: 0 });
+
+  const player = useXR((state) => state.player);
+
+  const [text1, setText1] = useState("left");
+  const [text2, setText2] = useState("right");
+
+  //
+  // Update `player` position and rotation
+  //
+
+  const sensitivity = {
+    left: { x: 1 / 5, y: 1 / 5 },
+    right: { x: 1 / 50, y: 1 / 10 },
+  };
+
+  useFrame(() => {
+    const leftpad = leftpadRef.current;
+    const rightpad = rightpadRef.current;
+
+    setText1(`leftpad: [ ${leftpad.x.toFixed(3)}, ${leftpad.y.toFixed(3)} ]`);
+
+    player.position.add(
+      new THREE.Vector3(
+        leftpad.x * sensitivity.left.x,
+        0,
+        leftpad.y * sensitivity.left.y
+      ).applyEuler(player.rotation)
+    );
+
+    setText2(
+      `rightpad: [ ${rightpad.x.toFixed(3)}, ${rightpad.y.toFixed(3)} ]`
+    );
+    player.rotation.y -= rightpad.x * sensitivity.right.x;
+    player.position.y -= rightpad.y * sensitivity.right.y;
+  });
+
+  //
+  // 🕹️ XR Gamepads (see: https://github.com/pmndrs/react-xr/issues/218)
+  //
+
+  const leftController = useController("left");
+  const rightController = useController("right");
+
+  useFrame((state, delta, XRFrame) => {
+    if (XRFrame) {
+      if (leftController) {
+        const XRLeftGamepad = leftController.inputSource.gamepad;
+
+        const leftpad = leftpadRef.current;
+        leftpad.x = XRLeftGamepad?.axes[2] || 0;
+        leftpad.y = XRLeftGamepad?.axes[3] || 0;
+      }
+
+      if (rightController) {
+        const XRRightGamepad = rightController.inputSource.gamepad;
+
+        const rightpad = rightpadRef.current;
+        rightpad.x = XRRightGamepad?.axes[2] || 0;
+        rightpad.y = XRRightGamepad?.axes[3] || 0;
+      }
+    }
+  });
+
+  //
+  // 🔘 nipple gamepads
+  //
+
+  const size = 100;
+  const margin = "1rem";
+
+  useEffect(() => {
+    if (!nipples) return;
+
+    //
+    // left
+    //
+
+    const managerLeft = nipplejs.create({
+      mode: "static",
+      size,
+      position: {
+        bottom: `calc(0% + ${size / 2}px + ${margin})`,
+        left: `calc(0% + ${size / 2}px + ${margin})`,
+      },
+    });
+
+    const leftpad = leftpadRef.current;
+    managerLeft.on("move", (evt, { vector, force }) => {
+      if (force > 1) return;
+
+      leftpad.x = vector.x;
+      leftpad.y = -vector.y;
+    });
+    managerLeft.on("end", (evt, nipple) => {
+      leftpad.x = 0;
+      leftpad.y = 0;
+    });
+
+    const managerRight = nipplejs.create({
+      mode: "static",
+      size,
+      position: {
+        bottom: `calc(0% + ${size / 2}px + ${margin})`,
+        right: `calc(0% + ${size / 2}px + ${margin})`,
+      },
+    });
+
+    //
+    // right
+    //
+
+    const rightpad = rightpadRef.current;
+
+    managerRight.on("move", (evt, { vector, force }) => {
+      if (force > 1) return;
+
+      rightpad.x = vector.x;
+      rightpad.y = -vector.y;
+    });
+    managerRight.on("end", () => {
+      rightpad.x = 0;
+      rightpad.y = 0;
+    });
+
+    return () => {
+      managerLeft?.destroy();
+      managerRight?.destroy();
+    };
+  }, [nipples]);
+
+  return (
+    <>
+      <FaceText position={[0, 6, 0]}>{text1}</FaceText>
+      <FaceText position={[0, 5, 0]}>{text2}</FaceText>
+    </>
+  );
+}
+
 function Camera({
   position,
   lookAt,
@@ -86,56 +235,12 @@ function Camera({
     player.position.set(...position);
   }, [player, position]);
 
-  useFrame(() => {
-    cameraRef.current?.lookAt(...lookAt);
-  });
-
-  const [text1, setText1] = useState("left");
-  const [text2, setText2] = useState("right");
-
-  //
-  // 🕹️ Gamepads (see: https://github.com/pmndrs/react-xr/issues/218)
-  //
-
-  const leftController = useController("left");
-  const rightController = useController("right");
-
-  useFrame((state, delta, XRFrame) => {
-    if (XRFrame) {
-      if (leftController) {
-        const leftGamePad = leftController.inputSource.gamepad;
-
-        const x = leftGamePad?.axes[2] || 0;
-        const y = leftGamePad?.axes[3] || 0;
-        setText1(`left: [ ${x.toFixed(3)}, ${y.toFixed(3)} ]`);
-
-        const lambda = 2.5;
-
-        player.position.add(
-          new THREE.Vector3(x / lambda, 0, y / lambda).applyEuler(
-            player.rotation
-          )
-        );
-      }
-
-      if (rightController) {
-        const rightGamePad = rightController.inputSource.gamepad;
-
-        const x = rightGamePad?.axes[2] || 0;
-        const y = rightGamePad?.axes[3] || 0;
-        setText2(`right: [ ${x.toFixed(3)}, ${y.toFixed(3)} ]`);
-
-        if (x) player.rotation.y -= x / 15;
-        if (y) player.position.y -= y / 10;
-      }
-    }
-  });
+  // useFrame(() => {
+  //   cameraRef.current?.lookAt(...lookAt);
+  // });
 
   return (
     <>
-      <FaceText position={[0, 6, 0]}>{text1}</FaceText>
-      <FaceText position={[0, 5, 0]}>{text2}</FaceText>
-
       <PerspectiveCamera ref={cameraRef} fov={fov} makeDefault />
     </>
   );
