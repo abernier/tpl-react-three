@@ -189,67 +189,48 @@ function Gamepads({ nipples = true }: GamepadsProps) {
   //
   // 🔘 nipple gamepads
   //
+  // see: https://yoannmoi.net/nipplejs/
+  //
 
   const size = 100;
-  const margin = "1rem";
 
   useEffect(() => {
     if (!nipples) return;
 
-    //
-    // left
-    //
-
-    const managerLeft = nipplejs.create({
-      mode: "static",
+    const manager = nipplejs.create({
+      mode: "dynamic",
+      multitouch: true,
+      maxNumberOfNipples: 2,
       size,
-      position: {
-        bottom: `calc(0% + ${size / 2}px + ${margin})`,
-        left: `calc(0% + ${size / 2}px + ${margin})`,
-      },
     });
 
     const leftpad = leftpadRef.current;
-    managerLeft.on("move", (evt, { vector, force }) => {
-      if (force > 1) return;
+    const rightpad = rightpadRef.current;
+    manager.on("move", (evt, { identifier, vector, force }) => {
+      const nth = evt.target.ids.findIndex((id) => id === identifier);
 
-      leftpad.x = vector.x;
-      leftpad.y = -vector.y;
+      if (nth === 0) {
+        leftpad.x = vector.x;
+        leftpad.y = -vector.y;
+      }
+      if (nth === 1) {
+        rightpad.x = vector.x;
+        rightpad.y = -vector.y;
+      }
     });
-    managerLeft.on("end", (evt, nipple) => {
+    manager.on("end", (evt, nipple) => {
       leftpad.x = 0;
       leftpad.y = 0;
-    });
-
-    const managerRight = nipplejs.create({
-      mode: "static",
-      size,
-      position: {
-        bottom: `calc(0% + ${size / 2}px + ${margin})`,
-        right: `calc(0% + ${size / 2}px + ${margin})`,
-      },
-    });
-
-    //
-    // right
-    //
-
-    const rightpad = rightpadRef.current;
-
-    managerRight.on("move", (evt, { vector, force }) => {
-      if (force > 1) return;
-
-      rightpad.x = vector.x;
-      rightpad.y = -vector.y;
-    });
-    managerRight.on("end", () => {
       rightpad.x = 0;
       rightpad.y = 0;
     });
 
+    //
+    // cleanup
+    //
+
     return () => {
-      managerLeft?.destroy();
-      managerRight?.destroy();
+      manager.destroy();
     };
   }, [nipples]);
 
