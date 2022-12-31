@@ -209,21 +209,27 @@ function Gamepads({ nipples = true }: GamepadsProps) {
     const rightpad = rightpadRef.current;
     manager.on("move", (evt, { identifier, position, vector, force }) => {
       if (evt.target.ids.length <= 1) {
+        // Only one joystick
         if (position.x < size.width / 2) {
+          // left part of the screen
           leftpad.x = vector.x;
           leftpad.y = -vector.y;
         } else {
+          // right part of the screen
           rightpad.x = vector.x;
           rightpad.y = -vector.y;
         }
       } else {
+        // Two joysticks
         const otherJoystickId = evt.target.ids.find((id) => id !== identifier);
         const otherJoystick = manager.get(otherJoystickId!);
 
         if (position.x < otherJoystick.position.x) {
+          // I'm on the left of the other joystick
           leftpad.x = vector.x;
           leftpad.y = -vector.y;
         } else {
+          // I'm on the right of the other joystick
           rightpad.x = vector.x;
           rightpad.y = -vector.y;
         }
