@@ -113,29 +113,76 @@ function Gamepads({ nipples = true }: GamepadsProps) {
   });
 
   //
-  // 🕹️ XR Gamepads (see: https://github.com/pmndrs/react-xr/issues/218)
+  // 🕹️ Normal gamepad
+  //
+  // https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API/Using_the_Gamepad_API
+  //
+
+  const [gamepadIndex, setGamepadIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    const onConnect = (e: GamepadEvent) => {
+      console.log("gamepadconnected");
+      const gp = navigator.getGamepads()[e.gamepad.index];
+      if (!gp) return;
+
+      console.log("gp", gp);
+      setGamepadIndex(gp.index);
+
+      console.log(
+        `Gamepad connected at index ${gp.index}: ${gp.id} with ${gp.buttons.length} buttons, ${gp.axes.length} axes.`
+      );
+    };
+    window.addEventListener("gamepadconnected", onConnect);
+
+    return () => {
+      console.log("gamepaddisconnected");
+      setGamepadIndex(null);
+      window.removeEventListener("gamepadconnected", onConnect);
+    };
+  }, []);
+
+  const threshold = (x: number, min = 0.1) => (Math.abs(x) > min ? x : 0);
+
+  useFrame(() => {
+    if (gamepadIndex === null) return;
+
+    const gp = navigator.getGamepads()[gamepadIndex];
+    if (!gp) return;
+
+    const leftpad = leftpadRef.current;
+    leftpad.x = threshold(gp.axes[0]);
+    leftpad.y = threshold(gp.axes[1]);
+
+    const rightpad = rightpadRef.current;
+    rightpad.x = threshold(gp.axes[2]);
+    rightpad.y = threshold(gp.axes[3]);
+  });
+
+  //
+  // XR Gamepads (see: https://github.com/pmndrs/react-xr/issues/218)
   //
 
   const leftController = useController("left");
   const rightController = useController("right");
 
   useFrame((state, delta, XRFrame) => {
-    if (XRFrame) {
-      if (leftController) {
-        const XRLeftGamepad = leftController.inputSource.gamepad;
+    if (!XRFrame) return;
 
-        const leftpad = leftpadRef.current;
-        leftpad.x = XRLeftGamepad?.axes[2] || 0;
-        leftpad.y = XRLeftGamepad?.axes[3] || 0;
-      }
+    if (leftController) {
+      const XRLeftGamepad = leftController.inputSource.gamepad;
 
-      if (rightController) {
-        const XRRightGamepad = rightController.inputSource.gamepad;
+      const leftpad = leftpadRef.current;
+      leftpad.x = XRLeftGamepad?.axes[2] || 0;
+      leftpad.y = XRLeftGamepad?.axes[3] || 0;
+    }
 
-        const rightpad = rightpadRef.current;
-        rightpad.x = XRRightGamepad?.axes[2] || 0;
-        rightpad.y = XRRightGamepad?.axes[3] || 0;
-      }
+    if (rightController) {
+      const XRRightGamepad = rightController.inputSource.gamepad;
+
+      const rightpad = rightpadRef.current;
+      rightpad.x = XRRightGamepad?.axes[2] || 0;
+      rightpad.y = XRRightGamepad?.axes[3] || 0;
     }
   });
 
