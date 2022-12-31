@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useController, useXR } from "@react-three/xr";
 import { Environment, PerspectiveCamera } from "@react-three/drei";
 import nipplejs, { JoystickManager } from "nipplejs";
@@ -192,7 +192,8 @@ function Gamepads({ nipples = true }: GamepadsProps) {
   // see: https://yoannmoi.net/nipplejs/
   //
 
-  const size = 100;
+  const { size } = useThree();
+  console.log("size", size);
 
   useEffect(() => {
     if (!nipples) return;
@@ -201,21 +202,31 @@ function Gamepads({ nipples = true }: GamepadsProps) {
       mode: "dynamic",
       multitouch: true,
       maxNumberOfNipples: 2,
-      size,
+      size: 100,
     });
 
     const leftpad = leftpadRef.current;
     const rightpad = rightpadRef.current;
-    manager.on("move", (evt, { identifier, vector, force }) => {
-      const nth = evt.target.ids.findIndex((id) => id === identifier);
+    manager.on("move", (evt, { identifier, position, vector, force }) => {
+      if (evt.target.ids.length <= 1) {
+        if (position.x < size.width / 2) {
+          leftpad.x = vector.x;
+          leftpad.y = -vector.y;
+        } else {
+          rightpad.x = vector.x;
+          rightpad.y = -vector.y;
+        }
+      } else {
+        const otherJoystickId = evt.target.ids.find((id) => id !== identifier);
+        const otherJoystick = manager.get(otherJoystickId!);
 
-      if (nth === 0) {
-        leftpad.x = vector.x;
-        leftpad.y = -vector.y;
-      }
-      if (nth === 1) {
-        rightpad.x = vector.x;
-        rightpad.y = -vector.y;
+        if (position.x < otherJoystick.position.x) {
+          leftpad.x = vector.x;
+          leftpad.y = -vector.y;
+        } else {
+          rightpad.x = vector.x;
+          rightpad.y = -vector.y;
+        }
       }
     });
     manager.on("end", (evt, nipple) => {
