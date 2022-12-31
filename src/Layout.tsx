@@ -88,7 +88,7 @@ function Gamepads({ nipples = true }: GamepadsProps) {
 
   const sensitivity = {
     left: { x: 1 / 5, y: 1 / 5 },
-    right: { x: 1 / 50, y: 1 / 10 },
+    right: { x: 1 / 100, y: 1 / 10 },
   };
 
   useFrame(() => {
@@ -192,13 +192,13 @@ function Gamepads({ nipples = true }: GamepadsProps) {
   // see: https://yoannmoi.net/nipplejs/
   //
 
-  const { size } = useThree();
-  console.log("size", size);
+  const { size, gl } = useThree();
 
   useEffect(() => {
     if (!nipples) return;
 
     const manager = nipplejs.create({
+      zone: gl.domElement.parentNode as HTMLElement,
       mode: "dynamic",
       multitouch: true,
       maxNumberOfNipples: 2,
@@ -249,7 +249,7 @@ function Gamepads({ nipples = true }: GamepadsProps) {
     return () => {
       manager.destroy();
     };
-  }, [nipples]);
+  }, [gl, nipples, size]);
 
   return (
     <>
