@@ -13,7 +13,8 @@ type FaceTextProps = {
 function FaceText({ children, position, ...props }: FaceTextProps) {
   const fontProps = {
     // font: "/Inter-Regular.woff",
-    font: "/RobotoMono-VariableFont_wght.ttf",
+    
+    font: new URL("/RobotoMono-VariableFont_wght.ttf", import.meta.url).href,
     fontSize: 0.5,
     // letterSpacing: -0.05,
     // lineHeight: 1,
