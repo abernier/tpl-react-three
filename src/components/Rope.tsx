@@ -1,19 +1,20 @@
+import * as THREE from 'three'
 import { useFrame } from "@react-three/fiber";
 import { Sphere, CatmullRomLine, PivotControls } from "@react-three/drei";
 import {
-  RigidBodyApi,
+
   RigidBody,
-  RigidBodyApiRef,
+
   useSphericalJoint,
 } from "@react-three/rapier";
-import { forwardRef, ReactNode, useRef, createRef, useState } from "react";
+import { forwardRef, ReactNode, useRef, createRef, useState, RefObject } from "react";
 import { Vector3 } from "three";
 
 import usePivot from "./usePivot";
 
 import type { GroupProps } from "@react-three/fiber";
 import type { LineProps } from "@react-three/drei";
-import type { RigidBodyProps } from "@react-three/rapier";
+import type { RapierRigidBody, RigidBodyProps } from "@react-three/rapier";
 
 //
 // Rope component
@@ -25,7 +26,7 @@ type RopeSegmentProps = RigidBodyProps & {
   children: ReactNode;
 };
 
-const RopeSegment = forwardRef<RigidBodyApi, RopeSegmentProps>(
+const RopeSegment = forwardRef<RapierRigidBody, RopeSegmentProps>(
   ({ children, ...rest }, ref) => {
     return (
       <RigidBody ref={ref} {...rest}>
@@ -39,10 +40,16 @@ const RopeSegment = forwardRef<RigidBodyApi, RopeSegmentProps>(
  * We can wrap our hook in a component in order to initiate
  * them conditionally and dynamically
  */
-const RopeJoint = ({ a, b }: { a: RigidBodyApiRef; b: RigidBodyApiRef }) => {
+const RopeJoint = ({
+  a,
+  b
+}: {
+  a: RefObject<RapierRigidBody>;
+  b: RefObject<RapierRigidBody>;
+}) => {
   useSphericalJoint(a, b, [
-    [-(radius + offset), 0, 0],
-    [radius + offset, 0, 0],
+    [-0.5, 0, 0],
+    [0.5, 0, 0]
   ]);
   return null;
 };
@@ -63,7 +70,7 @@ export const Rope = (props: RopeProps) => {
   ]);
 
   const refs = useRef(
-    Array.from({ length: props.length }).map(() => createRef<RigidBodyApi>())
+    Array.from({ length: props.length }).map(() => createRef<RapierRigidBody>())
   );
 
   const pivotControlsRef = useRef<THREE.Group>(null);
@@ -77,7 +84,7 @@ export const Rope = (props: RopeProps) => {
     if (!groupRef.current) return;
 
     const points = refs.current.map(({ current: body }) => {
-      const pos = body?.translation().clone() || new Vector3();
+      const pos = body && new Vector3().copy(body.translation()) || new Vector3();
 
       return groupRef.current!.worldToLocal(pos);
     });
@@ -116,7 +123,7 @@ export const Rope = (props: RopeProps) => {
         points={points} // Array of Points
         color="#ec36a0"
         lineWidth={3} // In pixels (default)
-        segments={64}
+        // segments={64}
       />
 
       <PivotControls ref={pivotControlsRef} scale={2} />

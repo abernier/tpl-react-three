@@ -58,7 +58,7 @@ function Layout({
         intensity={2}
         shadow-bias={-0.0001}
       />
-      <ambientLight intensity={0.2} />
+      <ambientLight intensity={1} />
 
       {gui.grid && <gridHelper args={[30, 30, 30]} position-y=".01" />}
       {gui.axes && <axesHelper args={[5]} />}

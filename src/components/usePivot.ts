@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import * as THREE from "three";
 
-import type { RigidBodyApi } from "@react-three/rapier";
+import type { RapierRigidBody } from "@react-three/rapier";
 import { useFrame } from "@react-three/fiber";
 
 import type { RefObject } from "react";
@@ -15,12 +15,16 @@ const linvelStrength = 20;
 const angvelStrength = 20;
 
 function usePivot(
-  rigidBodyRef: RefObject<RigidBodyApi>,
+  rigidBodyRef: RefObject<RapierRigidBody>,
   pivotControlsRef: RefObject<THREE.Object3D>,
   arrowHelperRef?: RefObject<THREE.ArrowHelper>
 ) {
   const [v1] = useState(new THREE.Vector3(0, 0, 0));
   const [v2] = useState(new THREE.Vector3(0, 0, 0));
+  const [v3] = useState(new THREE.Vector3(0, 0, 0));
+  const [q1] = useState(new THREE.Quaternion());
+  const [q2] = useState(new THREE.Quaternion());
+  const [e1] = useState(new THREE.Euler());
 
   useFrame(() => {
     const rigidBody = rigidBodyRef.current;
@@ -50,12 +54,12 @@ function usePivot(
       // angular velocity
       //
 
-      const qb = pivotControls.getWorldQuaternion(new THREE.Quaternion());
-      const qa = rigidBody.rotation();
+      const qb = pivotControls.getWorldQuaternion(q2);
+      const qa = q1.copy(rigidBody.rotation());
 
       const qdiff = qb.multiply(qa.invert()); // quaternion "diff" https://stackoverflow.com/a/22167097/133327
-      const angvel = new THREE.Euler().setFromQuaternion(qdiff);
-      const angvel2 = new THREE.Vector3(angvel.x, angvel.y, angvel.z);
+      const angvel = e1.setFromQuaternion(qdiff);
+      const angvel2 = v3.set(angvel.x, angvel.y, angvel.z);
 
       rigidBody.setAngvel(angvel2.multiplyScalar(angvelStrength), true);
     }

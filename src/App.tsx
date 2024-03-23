@@ -27,12 +27,12 @@ function App() {
           <Controllers />
           <Hands />
 
-          <Physics
+          <Physics debug
             gravity={[0, -60, 0]}
             // timeStep={1 / 60}
             //
           >
-            <Debug />
+
 
             <Layout>
               <Scene />
