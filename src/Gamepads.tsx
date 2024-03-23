@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useController, useXR } from "@react-three/xr";
 import nipplejs from "nipplejs";
@@ -12,8 +12,8 @@ type GamepadsProps = {
   nipples: boolean;
 };
 function Gamepads({ nipples = true }: GamepadsProps) {
-  const leftpadRef = useRef<Vec2>({ x: 0, y: 0 });
-  const rightpadRef = useRef<Vec2>({ x: 0, y: 0 });
+  const [leftpad] = useState<Vec2>({ x: 0, y: 0 });
+  const [rightpad] = useState<Vec2>({ x: 0, y: 0 });
 
   const player = useXR((state) => state.player);
 
@@ -30,9 +30,6 @@ function Gamepads({ nipples = true }: GamepadsProps) {
   };
 
   useFrame(() => {
-    const leftpad = leftpadRef.current;
-    const rightpad = rightpadRef.current;
-
     setText1(`leftpad: [ ${leftpad.x.toFixed(3)}, ${leftpad.y.toFixed(3)} ]`);
 
     player.position.add(
@@ -55,11 +52,9 @@ function Gamepads({ nipples = true }: GamepadsProps) {
       <FaceText position={[0, 6, 0]}>{text1}</FaceText>
       <FaceText position={[0, 5, 0]}>{text2}</FaceText>
 
-      <NormalGamepad leftpadRef={leftpadRef} rightpadRef={rightpadRef} />
-      <XRGamepads leftpadRef={leftpadRef} rightpadRef={rightpadRef} />
-      {nipples && (
-        <NipplesGamepads leftpadRef={leftpadRef} rightpadRef={rightpadRef} />
-      )}
+      <NormalGamepad leftpad={leftpad} rightpad={rightpad} />
+      <XRGamepads leftpad={leftpad} rightpad={rightpad} />
+      {nipples && <NipplesGamepads leftpad={leftpad} rightpad={rightpad} />}
     </>
   );
 }
@@ -73,11 +68,11 @@ export default Gamepads;
 //
 
 function NormalGamepad({
-  leftpadRef,
-  rightpadRef,
+  leftpad,
+  rightpad,
 }: {
-  leftpadRef: React.MutableRefObject<Vec2>;
-  rightpadRef: React.MutableRefObject<Vec2>;
+  leftpad: Vec2;
+  rightpad: Vec2;
 }) {
   const [gamepadIndex, setGamepadIndex] = useState<number | null>(null);
 
@@ -111,11 +106,9 @@ function NormalGamepad({
     const gp = navigator.getGamepads()[gamepadIndex];
     if (!gp) return;
 
-    const leftpad = leftpadRef.current;
     leftpad.x = threshold(gp.axes[0]);
     leftpad.y = threshold(gp.axes[1]);
 
-    const rightpad = rightpadRef.current;
     rightpad.x = threshold(gp.axes[2]);
     rightpad.y = threshold(gp.axes[3]);
   });
@@ -127,13 +120,7 @@ function NormalGamepad({
 // XR Gamepads (see: https://github.com/pmndrs/react-xr/issues/218)
 //
 
-function XRGamepads({
-  leftpadRef,
-  rightpadRef,
-}: {
-  leftpadRef: React.MutableRefObject<Vec2>;
-  rightpadRef: React.MutableRefObject<Vec2>;
-}) {
+function XRGamepads({ leftpad, rightpad }: { leftpad: Vec2; rightpad: Vec2 }) {
   const leftController = useController("left");
   const rightController = useController("right");
 
@@ -143,7 +130,6 @@ function XRGamepads({
     if (leftController) {
       const XRLeftGamepad = leftController.inputSource?.gamepad;
 
-      const leftpad = leftpadRef.current;
       leftpad.x = XRLeftGamepad?.axes[2] || 0;
       leftpad.y = XRLeftGamepad?.axes[3] || 0;
     }
@@ -151,7 +137,6 @@ function XRGamepads({
     if (rightController) {
       const XRRightGamepad = rightController.inputSource?.gamepad;
 
-      const rightpad = rightpadRef.current;
       rightpad.x = XRRightGamepad?.axes[2] || 0;
       rightpad.y = XRRightGamepad?.axes[3] || 0;
     }
@@ -167,11 +152,11 @@ function XRGamepads({
 //
 
 function NipplesGamepads({
-  leftpadRef,
-  rightpadRef,
+  leftpad,
+  rightpad,
 }: {
-  leftpadRef: React.MutableRefObject<Vec2>;
-  rightpadRef: React.MutableRefObject<Vec2>;
+  leftpad: Vec2;
+  rightpad: Vec2;
 }) {
   const { size, gl } = useThree();
 
@@ -184,8 +169,6 @@ function NipplesGamepads({
       size: 100,
     });
 
-    const leftpad = leftpadRef.current;
-    const rightpad = rightpadRef.current;
     manager.on("move", (evt, { identifier, position, vector }) => {
       if (evt.target.ids.length <= 1) {
         // Only one joystick
@@ -228,7 +211,7 @@ function NipplesGamepads({
     return () => {
       manager.destroy();
     };
-  }, [gl, size, leftpadRef, rightpadRef]);
+  }, [gl, size, leftpad, rightpad]);
 
   return <></>;
 }
