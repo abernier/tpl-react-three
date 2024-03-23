@@ -1,11 +1,7 @@
-import { useState } from "react";
-
 import * as THREE from "three";
-
-import type { RapierRigidBody } from "@react-three/rapier";
+import { useState, type RefObject } from "react";
 import { useFrame } from "@react-three/fiber";
-
-import type { RefObject } from "react";
+import type { RapierRigidBody } from "@react-three/rapier";
 
 //
 // usePivot is a custom hook that applies a linear and angular velocity to a rigid body in order to move it to the pivotControls position and rotation.

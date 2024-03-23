@@ -1,8 +1,7 @@
-import * as THREE from "three";
+import { RigidBody } from "@react-three/rapier";
+import { type ComponentProps } from "react";
 
-import { RigidBody, RigidBodyProps } from "@react-three/rapier";
-
-type CubeProps = { color?: string } & RigidBodyProps;
+type CubeProps = ComponentProps<typeof RigidBody> & { color?: string };
 
 function Cube({ color = "blue", ...props }: CubeProps) {
   return (

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import styled from "@emotion/styled";
 import { Canvas, useThree } from "@react-three/fiber";
 import { useKeyboardControls } from "@react-three/drei";
-import { Physics, Debug } from "@react-three/rapier";
+import { Physics } from "@react-three/rapier";
 import { XR, Controllers, Hands, VRButton, Interactive } from "@react-three/xr";
 
 import Layout from "./Layout";
@@ -27,13 +27,12 @@ function App() {
           <Controllers />
           <Hands />
 
-          <Physics debug
+          <Physics
+            debug
             gravity={[0, -60, 0]}
             // timeStep={1 / 60}
             //
           >
-
-
             <Layout>
               <Scene />
             </Layout>

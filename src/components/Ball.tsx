@@ -1,17 +1,15 @@
-import { useCallback, useEffect, useRef } from "react";
 import * as THREE from "three";
+import { type ElementRef, useCallback, useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useRapier, RigidBody } from "@react-three/rapier";
 import { useKeyboardControls } from "@react-three/drei";
 import { useXR } from "@react-three/xr";
 import { folder, useControls } from "leva";
 
-import type { RigidBodyApi } from "@react-three/rapier";
-
 function Ball() {
   const { player } = useXR();
 
-  const bodyRef = useRef<RigidBodyApi>(null);
+  const bodyRef = useRef<ElementRef<typeof RigidBody>>(null);
 
   const [subscribeKeys, getKeys] = useKeyboardControls(); // see: https://github.com/pmndrs/drei#keyboardcontrols
   const { rapier, world } = useRapier();
@@ -72,7 +70,7 @@ function Ball() {
       impulse.normalize().setLength(impulseStrength);
       // console.log("impulse", impulse);
 
-      body.applyImpulse(impulse);
+      body.applyImpulse(impulse, true);
     }
 
     if (body && torque.length() > 0) {
@@ -81,7 +79,7 @@ function Ball() {
       torque.normalize().setLength(torqueStrength);
       // console.log("torque", torque);
 
-      body.applyTorqueImpulse(torque);
+      body.applyTorqueImpulse(torque, true);
     }
   });
 
@@ -100,10 +98,10 @@ function Ball() {
       origin.y -= gui.radius + 0.05;
       const direction = { x: 0, y: -1, z: 0 };
       const ray = new rapier.Ray(origin, direction);
-      const hit = world.raw().castRay(ray, 10, true);
+      const hit = world.castRay(ray, 10, true);
 
       if (hit && hit.toi < 0.15) {
-        body.applyImpulse({ x: 0, y: gui.jumpStrength, z: 0 });
+        body.applyImpulse({ x: 0, y: gui.jumpStrength, z: 0 }, true);
       }
     }
   }, [gui.jumpStrength, gui.radius, rapier.Ray, world]);

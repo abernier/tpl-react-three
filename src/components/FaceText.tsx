@@ -1,26 +1,19 @@
-import { ReactNode, useRef } from "react";
 import * as THREE from "three";
+import { type ElementRef, useRef, type ComponentProps } from "react";
 import { useFrame } from "@react-three/fiber";
-
 import { Text } from "@react-three/drei";
 
-import type { Object3D } from "three";
+type FaceTextProps = ComponentProps<typeof Text>;
 
-type FaceTextProps = {
-  children?: ReactNode;
-  position?: [number, number, number];
-};
-function FaceText({ children, position, ...props }: FaceTextProps) {
+function FaceText({ ...props }: FaceTextProps) {
   const fontProps = {
-    // font: "/Inter-Regular.woff",
-    
     font: new URL("/RobotoMono-VariableFont_wght.ttf", import.meta.url).href,
     fontSize: 0.5,
     // letterSpacing: -0.05,
     // lineHeight: 1,
     "material-toneMapped": false,
   };
-  const ref = useRef<Object3D>();
+  const ref = useRef<ElementRef<typeof Text>>();
 
   // Tie component to the render-loop
   useFrame(({ camera }) => {
@@ -28,11 +21,7 @@ function FaceText({ children, position, ...props }: FaceTextProps) {
     ref.current?.quaternion.copy(camera.getWorldQuaternion(q)); // Make text face the camera
   });
 
-  return (
-    <group position={position}>
-      <Text ref={ref} {...props} {...fontProps} children={children} />
-    </group>
-  );
+  return <Text ref={ref} {...props} {...fontProps} />;
 }
 
 export default FaceText;

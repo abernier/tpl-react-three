@@ -1,20 +1,27 @@
-import * as THREE from 'three'
-import { useFrame } from "@react-three/fiber";
-import { Sphere, CatmullRomLine, PivotControls } from "@react-three/drei";
-import {
-
-  RigidBody,
-
-  useSphericalJoint,
-} from "@react-three/rapier";
-import { forwardRef, ReactNode, useRef, createRef, useState, RefObject } from "react";
 import { Vector3 } from "three";
+import {
+  forwardRef,
+  useRef,
+  createRef,
+  useState,
+  type RefObject,
+  type ComponentProps,
+  type ElementRef,
+} from "react";
+import { useFrame } from "@react-three/fiber";
+import {
+  Sphere,
+  CatmullRomLine,
+  PivotControls,
+  type LineProps,
+} from "@react-three/drei";
+import {
+  RigidBody,
+  useSphericalJoint,
+  RapierRigidBody,
+} from "@react-three/rapier";
 
 import usePivot from "./usePivot";
-
-import type { GroupProps } from "@react-three/fiber";
-import type { LineProps } from "@react-three/drei";
-import type { RapierRigidBody, RigidBodyProps } from "@react-three/rapier";
 
 //
 // Rope component
@@ -22,17 +29,11 @@ import type { RapierRigidBody, RigidBodyProps } from "@react-three/rapier";
 // @see https://codesandbox.io/s/react-three-rapier-joints-mhhbd4?file=/src/Rope.tsx:581-671
 //
 
-type RopeSegmentProps = RigidBodyProps & {
-  children: ReactNode;
-};
+type RopeSegmentProps = ComponentProps<typeof RigidBody>;
 
 const RopeSegment = forwardRef<RapierRigidBody, RopeSegmentProps>(
-  ({ children, ...rest }, ref) => {
-    return (
-      <RigidBody ref={ref} {...rest}>
-        {children}
-      </RigidBody>
-    );
+  ({ ...props }, ref) => {
+    return <RigidBody ref={ref} {...props} />;
   }
 );
 
@@ -42,27 +43,27 @@ const RopeSegment = forwardRef<RapierRigidBody, RopeSegmentProps>(
  */
 const RopeJoint = ({
   a,
-  b
+  b,
 }: {
   a: RefObject<RapierRigidBody>;
   b: RefObject<RapierRigidBody>;
 }) => {
   useSphericalJoint(a, b, [
     [-0.5, 0, 0],
-    [0.5, 0, 0]
+    [0.5, 0, 0],
   ]);
   return null;
 };
 
-interface RopeProps extends GroupProps {
+type RopeProps = ComponentProps<"group"> & {
   length: number;
-}
+};
 
 const radius = 0.25;
 const offset = 0.5;
 
 export const Rope = (props: RopeProps) => {
-  const groupRef = useRef<THREE.Group>(null);
+  const groupRef = useRef<ElementRef<"group">>(null);
 
   const [points, setPoints] = useState<LineProps["points"]>([
     [0, 0, 0],
@@ -70,10 +71,12 @@ export const Rope = (props: RopeProps) => {
   ]);
 
   const refs = useRef(
-    Array.from({ length: props.length }).map(() => createRef<RapierRigidBody>())
+    Array.from({ length: props.length }).map(() =>
+      createRef<ElementRef<typeof RopeSegment>>()
+    )
   );
 
-  const pivotControlsRef = useRef<THREE.Group>(null);
+  const pivotControlsRef = useRef<ElementRef<"group">>(null);
   usePivot(refs.current[0], pivotControlsRef);
 
   useFrame(() => {
@@ -84,7 +87,8 @@ export const Rope = (props: RopeProps) => {
     if (!groupRef.current) return;
 
     const points = refs.current.map(({ current: body }) => {
-      const pos = body && new Vector3().copy(body.translation()) || new Vector3();
+      const pos =
+        (body && new Vector3().copy(body.translation())) || new Vector3();
 
       return groupRef.current!.worldToLocal(pos);
     });

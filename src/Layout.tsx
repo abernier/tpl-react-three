@@ -1,5 +1,5 @@
-import { ReactNode, useEffect, useRef } from "react";
 import * as THREE from "three";
+import { type ElementRef, type ReactNode, useEffect, useRef } from "react";
 import { useXR } from "@react-three/xr";
 import { Environment, PerspectiveCamera } from "@react-three/drei";
 
@@ -77,7 +77,7 @@ function Camera({
   lookAt: [number, number, number];
   fov: number;
 }) {
-  const cameraRef = useRef<THREE.Camera>(); // non-XR camera
+  const cameraRef = useRef<ElementRef<typeof PerspectiveCamera>>(null); // non-XR camera
 
   const player = useXR((state) => state.player);
 

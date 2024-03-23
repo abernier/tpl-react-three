@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import { useEffect, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useController, useXR } from "@react-three/xr";
 import nipplejs from "nipplejs";
@@ -141,7 +141,7 @@ function XRGamepads({
     if (!XRFrame) return;
 
     if (leftController) {
-      const XRLeftGamepad = leftController.inputSource.gamepad;
+      const XRLeftGamepad = leftController.inputSource?.gamepad;
 
       const leftpad = leftpadRef.current;
       leftpad.x = XRLeftGamepad?.axes[2] || 0;
@@ -149,7 +149,7 @@ function XRGamepads({
     }
 
     if (rightController) {
-      const XRRightGamepad = rightController.inputSource.gamepad;
+      const XRRightGamepad = rightController.inputSource?.gamepad;
 
       const rightpad = rightpadRef.current;
       rightpad.x = XRRightGamepad?.axes[2] || 0;

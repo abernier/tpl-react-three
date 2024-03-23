@@ -1,11 +1,9 @@
+import { type ComponentProps, useMemo } from "react";
 import { KeyboardControls } from "@react-three/drei";
 
-import { ReactNode, useMemo } from "react";
+type KbdControlsProps = Omit<ComponentProps<typeof KeyboardControls>, "map">;
 
-type KbdControlsProps = {
-  children?: ReactNode;
-};
-export default function KbdControls({ children }: KbdControlsProps) {
+export default function KbdControls(props: KbdControlsProps) {
   const map = useMemo(
     () => [
       { name: "forward", keys: ["KeyW"] },
@@ -18,5 +16,5 @@ export default function KbdControls({ children }: KbdControlsProps) {
     []
   );
 
-  return <KeyboardControls map={map}>{children}</KeyboardControls>;
+  return <KeyboardControls {...props} map={map} />;
 }
