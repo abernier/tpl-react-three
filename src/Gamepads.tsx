@@ -14,6 +14,16 @@ function Gamepads() {
         leftpad: { x: 0, y: 0 },
         rightpad: { x: 0, y: 0 },
         nipples: false,
+        sensitivity: folder(
+          {
+            sensitivityLeft: { value: { x: 1 / 5, y: 1 / 5 }, label: "left" },
+            sensitivityRight: {
+              value: { x: 1 / 100, y: 1 / 10 },
+              label: "right",
+            },
+          },
+          { collapsed: true }
+        ),
       },
       { collapsed: true }
     ),
@@ -37,9 +47,9 @@ function Gamepads() {
   // Update `player` position and rotation
   //
 
-  const sensitivity: { left: Vec2; right: Vec2 } = {
-    left: { x: 1 / 5, y: 1 / 5 },
-    right: { x: 1 / 100, y: 1 / 10 },
+  const sensitivity = {
+    left: gui.sensitivityLeft,
+    right: gui.sensitivityRight,
   };
 
   useFrame(() => {
