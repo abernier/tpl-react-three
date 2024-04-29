@@ -14,8 +14,8 @@ function Gamepads() {
         leftpad: { x: 0, y: 0 },
         rightpad: { x: 0, y: 0 },
         nipples: false,
-      }
-      // { collapsed: true }
+      },
+      { collapsed: true }
     ),
   }));
 

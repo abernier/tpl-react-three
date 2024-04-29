@@ -6,6 +6,7 @@ import { Environment, PerspectiveCamera } from "@react-three/drei";
 import { useControls, folder } from "leva";
 
 import Gamepads from "./Gamepads";
+import { useFrame } from "@react-three/fiber";
 
 function Layout({
   children,
@@ -20,14 +21,6 @@ function Layout({
         bg,
         grid: true,
         axes: true,
-        camera: folder({
-          fov: 50,
-          player: { value: [7, 4.0, 21.0], step: 0.1 }, // ~= position of the camera (the player holds the camera)
-          lookAt: {
-            value: [0, 0, 0],
-            step: 0.1,
-          },
-        }),
       },
       { collapsed: true }
     ),
@@ -36,7 +29,7 @@ function Layout({
 
   return (
     <>
-      <Camera position={gui.player} lookAt={gui.lookAt} fov={gui.fov} />
+      <Camera />
 
       <Gamepads />
 
@@ -65,15 +58,21 @@ function Layout({
   );
 }
 
-function Camera({
-  position,
-  lookAt,
-  fov,
-}: {
-  position: [number, number, number];
-  lookAt: [number, number, number];
-  fov: number;
-}) {
+function Camera() {
+  const [gui, setGui] = useControls(() => ({
+    Camera: folder(
+      {
+        fov: 50,
+        position: { value: [7, 4.0, 21.0], step: 0.1 }, // ~= position of the camera (the player holds the camera)
+        lookAt: {
+          value: [0, 0, 0],
+          step: 0.1,
+        },
+      },
+      { collapsed: true }
+    ),
+  }));
+
   const cameraRef = useRef<ElementRef<typeof PerspectiveCamera>>(null); // non-XR camera
 
   const player = useXR((state) => state.player);
@@ -83,16 +82,16 @@ function Camera({
   //
 
   useEffect(() => {
-    player.position.set(...position);
-  }, [player, position]);
+    player.position.set(...gui.position);
+  }, [player, gui.position]);
 
   // useFrame(() => {
-  //   cameraRef.current?.lookAt(...lookAt);
+  //   cameraRef.current?.lookAt(...gui.lookAt);
   // });
 
   return (
     <>
-      <PerspectiveCamera ref={cameraRef} fov={fov} makeDefault />
+      <PerspectiveCamera ref={cameraRef} fov={gui.fov} makeDefault />
     </>
   );
 }
