@@ -28,9 +28,6 @@ function Layout({
             step: 0.1,
           },
         }),
-        gamepads: folder({
-          nipples: true,
-        }),
       },
       { collapsed: true }
     ),
@@ -41,7 +38,7 @@ function Layout({
     <>
       <Camera position={gui.player} lookAt={gui.lookAt} fov={gui.fov} />
 
-      <Gamepads nipples={gui.nipples} />
+      <Gamepads />
 
       <Environment background>
         <mesh scale={100}>

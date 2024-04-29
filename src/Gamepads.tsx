@@ -1,24 +1,37 @@
 import * as THREE from "three";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useController, useXR } from "@react-three/xr";
 import nipplejs from "nipplejs";
-
-import FaceText from "./components/FaceText";
+import { folder, useControls } from "leva";
 
 type Vec2 = { x: number; y: number };
 
-type GamepadsProps = {
-  nipples: boolean;
-};
-function Gamepads({ nipples = true }: GamepadsProps) {
-  const [leftpad] = useState<Vec2>({ x: 0, y: 0 });
-  const [rightpad] = useState<Vec2>({ x: 0, y: 0 });
+function Gamepads() {
+  const [gui, setGui] = useControls(() => ({
+    Gamepads: folder(
+      {
+        leftpad: { x: 0, y: 0 },
+        rightpad: { x: 0, y: 0 },
+        nipples: false,
+      }
+      // { collapsed: true }
+    ),
+  }));
+
+  const leftpad = gui.leftpad;
+  const setLeftpad = useCallback(
+    (v: typeof leftpad) => setGui({ leftpad: v }),
+    [setGui]
+  );
+
+  const rightpad = gui.rightpad;
+  const setRightpad = useCallback(
+    (v: typeof rightpad) => setGui({ rightpad: v }),
+    [setGui]
+  );
 
   const player = useXR((state) => state.player);
-
-  const [text1, setText1] = useState("left");
-  const [text2, setText2] = useState("right");
 
   //
   // Update `player` position and rotation
@@ -30,8 +43,6 @@ function Gamepads({ nipples = true }: GamepadsProps) {
   };
 
   useFrame(() => {
-    setText1(`leftpad: [ ${leftpad.x.toFixed(3)}, ${leftpad.y.toFixed(3)} ]`);
-
     player.position.add(
       new THREE.Vector3(
         leftpad.x * sensitivity.left.x,
@@ -40,21 +51,17 @@ function Gamepads({ nipples = true }: GamepadsProps) {
       ).applyEuler(player.rotation)
     );
 
-    setText2(
-      `rightpad: [ ${rightpad.x.toFixed(3)}, ${rightpad.y.toFixed(3)} ]`
-    );
     player.rotation.y -= rightpad.x * sensitivity.right.x;
     player.position.y -= rightpad.y * sensitivity.right.y;
   });
 
   return (
     <>
-      <FaceText position={[0, 6, 0]}>{text1}</FaceText>
-      <FaceText position={[0, 5, 0]}>{text2}</FaceText>
-
-      <NormalGamepad leftpad={leftpad} rightpad={rightpad} />
-      <XRGamepads leftpad={leftpad} rightpad={rightpad} />
-      {nipples && <NipplesGamepads leftpad={leftpad} rightpad={rightpad} />}
+      <NormalGamepad setLeftpad={setLeftpad} setRightpad={setRightpad} />
+      <XRGamepads setLeftpad={setLeftpad} setRightpad={setRightpad} />
+      {gui.nipples && (
+        <NipplesGamepads setLeftpad={setLeftpad} setRightpad={setRightpad} />
+      )}
     </>
   );
 }
@@ -68,11 +75,11 @@ export default Gamepads;
 //
 
 function NormalGamepad({
-  leftpad,
-  rightpad,
+  setLeftpad,
+  setRightpad,
 }: {
-  leftpad: Vec2;
-  rightpad: Vec2;
+  setLeftpad: (v: Vec2) => void;
+  setRightpad: (v: Vec2) => void;
 }) {
   const [gamepadIndex, setGamepadIndex] = useState<number | null>(null);
 
@@ -106,11 +113,8 @@ function NormalGamepad({
     const gp = navigator.getGamepads()[gamepadIndex];
     if (!gp) return;
 
-    leftpad.x = threshold(gp.axes[0]);
-    leftpad.y = threshold(gp.axes[1]);
-
-    rightpad.x = threshold(gp.axes[2]);
-    rightpad.y = threshold(gp.axes[3]);
+    setLeftpad({ x: threshold(gp.axes[0]), y: threshold(gp.axes[1]) });
+    setRightpad({ x: threshold(gp.axes[2]), y: threshold(gp.axes[3]) });
   });
 
   return <></>;
@@ -120,7 +124,13 @@ function NormalGamepad({
 // XR Gamepads (see: https://github.com/pmndrs/react-xr/issues/218)
 //
 
-function XRGamepads({ leftpad, rightpad }: { leftpad: Vec2; rightpad: Vec2 }) {
+function XRGamepads({
+  setLeftpad,
+  setRightpad,
+}: {
+  setLeftpad: (v: Vec2) => void;
+  setRightpad: (v: Vec2) => void;
+}) {
   const leftController = useController("left");
   const rightController = useController("right");
 
@@ -130,15 +140,19 @@ function XRGamepads({ leftpad, rightpad }: { leftpad: Vec2; rightpad: Vec2 }) {
     if (leftController) {
       const XRLeftGamepad = leftController.inputSource?.gamepad;
 
-      leftpad.x = XRLeftGamepad?.axes[2] || 0;
-      leftpad.y = XRLeftGamepad?.axes[3] || 0;
+      setLeftpad({
+        x: XRLeftGamepad?.axes[2] || 0,
+        y: XRLeftGamepad?.axes[3] || 0,
+      });
     }
 
     if (rightController) {
       const XRRightGamepad = rightController.inputSource?.gamepad;
 
-      rightpad.x = XRRightGamepad?.axes[2] || 0;
-      rightpad.y = XRRightGamepad?.axes[3] || 0;
+      setRightpad({
+        x: XRRightGamepad?.axes[2] || 0,
+        y: XRRightGamepad?.axes[3] || 0,
+      });
     }
   });
 
@@ -152,11 +166,11 @@ function XRGamepads({ leftpad, rightpad }: { leftpad: Vec2; rightpad: Vec2 }) {
 //
 
 function NipplesGamepads({
-  leftpad,
-  rightpad,
+  setLeftpad,
+  setRightpad,
 }: {
-  leftpad: Vec2;
-  rightpad: Vec2;
+  setLeftpad: (v: Vec2) => void;
+  setRightpad: (v: Vec2) => void;
 }) {
   const { size, gl } = useThree();
 
@@ -174,12 +188,10 @@ function NipplesGamepads({
         // Only one joystick
         if (position.x < size.width / 2) {
           // left part of the screen
-          leftpad.x = vector.x;
-          leftpad.y = -vector.y;
+          setLeftpad({ x: vector.x, y: -vector.y });
         } else {
           // right part of the screen
-          rightpad.x = vector.x;
-          rightpad.y = -vector.y;
+          setRightpad({ x: vector.x, y: -vector.y });
         }
       } else {
         // Two joysticks
@@ -188,20 +200,16 @@ function NipplesGamepads({
 
         if (position.x < otherJoystick.position.x) {
           // I'm on the left of the other joystick
-          leftpad.x = vector.x;
-          leftpad.y = -vector.y;
+          setLeftpad({ x: vector.x, y: -vector.y });
         } else {
           // I'm on the right of the other joystick
-          rightpad.x = vector.x;
-          rightpad.y = -vector.y;
+          setRightpad({ x: vector.x, y: -vector.y });
         }
       }
     });
     manager.on("end", (evt, nipple) => {
-      leftpad.x = 0;
-      leftpad.y = 0;
-      rightpad.x = 0;
-      rightpad.y = 0;
+      setLeftpad({ x: 0, y: 0 });
+      setRightpad({ x: 0, y: 0 });
     });
 
     //
@@ -211,7 +219,7 @@ function NipplesGamepads({
     return () => {
       manager.destroy();
     };
-  }, [gl, size, leftpad, rightpad]);
+  }, [gl, size, setLeftpad, setRightpad]);
 
   return <></>;
 }
